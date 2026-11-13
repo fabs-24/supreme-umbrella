@@ -1,0 +1,189 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✅❌ Verdadero o Falso -- Gestión de Proyectos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        h1 {
+            color: white;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .contador {
+            color: white;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        .caja {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        .tema {
+            color: #764ba2;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .enunciado {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .botones {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { transform: scale(1.05); }
+        .btn-v { background: #27ae60; color: white; }
+        .btn-f { background: #e74c3c; color: white; }
+        .correcto { background: #27ae60; color: white; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .incorrecto { background: #e74c3c; color: white; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .oculto { display: none !important; }
+        .resultado h2 { font-size: 1.8em; margin-bottom: 15px; }
+        .resultado p { font-size: 1.2em; margin-bottom: 25px; color: #555; }
+        .btn-reiniciar { background: #667eea; color: white; font-size: 1em; padding: 12px 30px; }
+    </style>
+</head>
+<body>
+
+    <h1>✅ VERDADERO O FALSO ❌</h1>
+    <p class="contador">Pregunta <span id="num">1</span> de <span id="total">15</span> | Puntos: <span id="puntos">0</span></p>
+
+    <div class="caja" id="juego">
+        <p class="tema" id="tema"></p>
+        <p class="enunciado" id="enunciado"></p>
+        <div class="botones">
+            <button class="btn-v" onclick="respuesta(true)">✅ VERDADERO</button>
+            <button class="btn-f" onclick="respuesta(false)">❌ FALSO</button>
+        </div>
+        <p id="retroalimentacion" style="margin-top:20px; display:none;"></p>
+    </div>
+
+    <div class="caja oculto resultado" id="final">
+        <h2 id="titulo-final"></h2>
+        <p>Obtuviste <strong id="puntos-final"></strong> de <strong id="total-preguntas"></strong> respuestas correctas 🎉</p>
+        <button class="btn-reiniciar" onclick="reiniciar()">🔄 Jugar de nuevo</button>
+    </div>
+
+    <script>
+        const preguntas = [
+            { t: "Metodologías Ágiles", e: "El Manifiesto Ágil se publicó en el año 2001", r: true, rta: "✅ Correcto: El Manifiesto Ágil fue creado en 2001 por 17 desarrolladores en Utah, EE.UU." },
+            { t: "Metodologías Ágiles", e: "En Scrum, el equipo debe cambiar los requisitos durante el Sprint", r: false, rta: "❌ Incorrecto: Una vez iniciado el Sprint, los requisitos no deben cambiarse; el equipo trabaja en lo acordado." },
+            { t: "Sprints", e: "El Sprint puede durar hasta 6 meses", r: false, rta: "❌ Incorrecto: Un Sprint dura de 1 a 4 semanas, nunca meses." },
+            { t: "Sprints", e: "Al final de cada Sprint se hace una revisión del producto", r: true, rta: "✅ Correcto: La Revisión del Sprint sirve para inspeccionar el incremento y adaptar el Backlog." },
+            { t: "Historias de Usuario", e: "Una Historia de Usuario describe una funcionalidad desde la perspectiva del cliente", r: true, rta: "✅ Correcto: Su estructura es: 'Como [rol] quiero [acción] para [beneficio]'." },
+            { t: "Historias de Usuario", e: "Las Historias de Usuario se escriben con lenguaje muy técnico y complejo", r: false, rta: "❌ Incorrecto: Deben ser sencillas y entendibles para todos, sin jerga técnica." },
+            { t: "Trello", e: "Trello organiza el trabajo mediante tableros, listas y tarjetas", r: true, rta: "✅ Correcto: Es su característica principal, muy visual y fácil de usar." },
+            { t: "Trello", e: "Solo una persona puede ver un tablero de Trello", r: false, rta: "❌ Incorrecto: Se puede compartir con todo el equipo para trabajar colaborativamente." },
+            { t: "Jira", e: "Jira permite crear flujos de trabajo personalizados para cada equipo", r: true, rta: "✅ Correcto: Es una de sus mayores ventajas, se adapta a diferentes metodologías." },
+            { t: "Jira", e: "Jira solo sirve para reportar errores de software", r: false, rta: "❌ Incorrecto: También gestiona tareas, historias de usuario, epicas y proyectos completos." },
+            { t: "GitHub", e: "GitHub permite ver quién modificó cada parte del código y cuándo", r: true, rta: "✅ Correcto: El control de versiones registra cada cambio con su autor y fecha." },
+            { t: "GitHub", e: "En GitHub no puedes volver a una versión anterior de tu proyecto", r: false, rta: "❌ Incorrecto: Puedes volver a cualquier versión anterior cuando quieras." },
+            { t: "Gestión de Proyectos", e: "El Backlog del producto es una lista fija que nunca cambia", r: false, rta: "❌ Incorrecto: Se actualiza y prioriza continuamente según las necesidades." },
+            { t: "Gestión de Proyectos", e: "La comunicación es clave en los proyectos ágiles", r: true, rta: "✅ Correcto: La colaboración y comunicación cara a cara es uno de los principios del Ágil." },
+            { t: "Cultura General", e: "El primer lenguaje de programación fue creado antes de 1950", r: true, rta: "✅ Correcto: Ada Lovelace escribió el primer algoritmo en 1843 para la Máquina Analítica." }
+        ];
+
+        let actual = 0, puntos = 0;
+        const juego = document.getElementById('juego');
+        const final = document.getElementById('final');
+        const tema = document.getElementById('tema');
+        const enunciado = document.getElementById('enunciado');
+        const num = document.getElementById('num');
+        const total = document.getElementById('total');
+        const puntosEl = document.getElementById('puntos');
+        const retro = document.getElementById('retroalimentacion');
+        const tituloFinal = document.getElementById('titulo-final');
+        const puntosFinal = document.getElementById('puntos-final');
+        const totalPreguntas = document.getElementById('total-preguntas');
+
+        total.textContent = preguntas.length;
+
+        function mostrar() {
+            retro.style.display = 'none';
+            num.textContent = actual + 1;
+            puntosEl.textContent = puntos;
+            const q = preguntas[actual];
+            tema.textContent = '📌 ' + q.t;
+            enunciado.textContent = q.e;
+        }
+
+        function respuesta(opcion) {
+            const q = preguntas[actual];
+            retro.style.display = 'block';
+            retro.className = '';
+            
+            if (opcion === q.r) {
+                retro.innerHTML = '✅ <strong>¡Correcto!</strong><br>' + q.rta;
+                retro.classList.add('correcto');
+                puntos++;
+            } else {
+                retro.innerHTML = '❌ <strong>Incorrecto</strong><br>' + q.rta;
+                retro.classList.add('incorrecto');
+            }
+            
+            actual++;
+            puntosEl.textContent = puntos;
+            
+            if (actual >= preguntas.length) {
+                setTimeout(mostrarFinal, 1800);
+            } else {
+                setTimeout(mostrar, 1800);
+            }
+        }
+
+        function mostrarFinal() {
+            juego.classList.add('oculto');
+            final.classList.remove('oculto');
+            puntosFinal.textContent = puntos;
+            totalPreguntas.textContent = preguntas.length;
+            
+            const porcentaje = (puntos / preguntas.length) * 100;
+            if (porcentaje === 100) tituloFinal.textContent = '🏆 ¡Perfecto! ¡Eres un experto!';
+            else if (porcentaje >= 70) tituloFinal.textContent = '🎉 ¡Muy bien! ¡Lo hiciste genial!';
+            else tituloFinal.textContent = '💪 ¡Sigue practicando, tú puedes!';
+        }
+
+        function reiniciar() {
+            actual = 0;
+            puntos = 0;
+            final.classList.add('oculto');
+            juego.classList.remove('oculto');
+            mostrar();
+        }
+
+        mostrar();
+    </script>
+</body>
+</html>
